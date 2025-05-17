@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YoYo Demo</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+  <div id="root"></div>
+
+  <!-- Compile React components on the fly -->
+  <script type="text/babel" data-type="module" src="src/components/Gradebook.jsx" data-presets="react"></script>
+  <script type="text/babel" data-type="module" src="src/components/TeacherAnalytics.jsx" data-presets="react"></script>
+  <script type="text/babel" data-type="module" src="src/components/MyWorkTab.jsx" data-presets="react"></script>
+  <script type="text/babel" data-type="module" src="src/components/MyGradesTab.jsx" data-presets="react"></script>
+  <script type="text/babel" data-type="module" src="src/components/AskYoYoTeacher.jsx" data-presets="react"></script>
+  <script type="text/babel" data-type="module" src="src/components/AskYoYoStudent.jsx" data-presets="react"></script>
+  <script type="text/babel" data-type="module" src="src/App.jsx" data-presets="react"></script>
+  <script type="text/babel" data-type="module">
+    import App from './src/App.jsx';
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
