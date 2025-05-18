@@ -4,6 +4,12 @@
 // ALWAYS ask the user for expected fallback behavior.
 
 import React, { useState } from 'react';
+import Gradebook from './components/Gradebook.jsx';
+import TeacherAnalytics from './components/TeacherAnalytics.jsx';
+import MyWorkTab from './components/MyWorkTab.jsx';
+import MyGradesTab from './components/MyGradesTab.jsx';
+import AskYoYoTeacher from './components/AskYoYoTeacher.jsx';
+import AskYoYoStudent from './components/AskYoYoStudent.jsx';
 
 // --------------------- DUMMY DATA ---------------------- //
 const dummyRoster = [
@@ -58,7 +64,7 @@ function clsButtonSecondary(extra='') {
 }
 
 export default function App() {
-  const [role, setRole] = useState('home');
+  const [role, setRole] = useState('login');
   // We'll add a new teacherTab "analytics", plus a new tab for "Ask YoYo"
   const [teacherTab, setTeacherTab] = useState('studentInfo');
   const [studentTab, setStudentTab] = useState('myWork');
@@ -71,6 +77,9 @@ export default function App() {
   const [aiError, setAiError] = useState(null);
   // We'll do a small loading state for AI generation
   const [aiLoading, setAiLoading] = useState(false);
+
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
 
   // Student side states
   const [studentId, setStudentId] = useState('S001');
@@ -309,153 +318,6 @@ export default function App() {
     setGeneratedActivities([]);
   }
 
-  function Gradebook() {
-    const [gradeInputs, setGradeInputs] = useState({});
-
-    const submitted = [];
-    units.forEach((u) => {
-      u.subActivities.forEach((sub) => {
-        if (sub.status === 'submitted' || sub.status === 'graded') {
-          submitted.push({ ...sub, unitTitle: u.title });
-        }
-      });
-    });
-
-    if (!submitted.length) {
-      return <p className="text-gray-600">No submissions yet.</p>;
-    }
-
-    function handleGradeInputChange(subId, val) {
-      if (val.length > 3) return;
-      setGradeInputs((p) => ({ ...p, [subId]: val }));
-    }
-
-    function handleGradeKeyDown(subId, e, studentId) {
-      if (e.key === 'Enter') {
-        const newGrade = parseInt(gradeInputs[subId] || '0', 10);
-        if (isNaN(newGrade)) return;
-        const finalGrade = Math.max(0, Math.min(999, newGrade));
-
-        const updated = units.map((u) => {
-          const newSubs = u.subActivities.map((s) => {
-            if (s.id === subId) {
-              return {
-                ...s,
-                status: 'graded',
-                grade: finalGrade,
-              };
-            }
-            return s;
-          });
-          return { ...u, subActivities: newSubs };
-        });
-        setUnits(updated);
-
-        const oldPerf = roster.find((r) => r.id === studentId)?.performance;
-        if (typeof oldPerf === 'number') {
-          const newPerf = Math.round((oldPerf + finalGrade) / 2);
-          const newRoster = roster.map((r) => {
-            if (r.id === studentId) {
-              return { ...r, performance: newPerf };
-            }
-            return r;
-          });
-          setRoster(newRoster);
-        }
-
-        setGradeInputs((p) => ({ ...p, [subId]: '' }));
-      }
-    }
-
-    return (
-      <table className="w-full bg-white rounded">
-        <thead>
-          <tr className="bg-blue-100">
-            <th className="p-2 text-left">SubActivity ID</th>
-            <th className="p-2 text-left">Student ID</th>
-            <th className="p-2 text-left">Title</th>
-            <th className="p-2 text-left">Submission</th>
-            <th className="p-2 text-left">Status</th>
-            <th className="p-2 text-left">Grade</th>
-          </tr>
-        </thead>
-        <tbody>
-          {submitted.map((act, idx) => {
-            const key = act.id;
-            return (
-              <tr key={key} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                <td className="p-2">{act.id}</td>
-                <td className="p-2">{act.studentId || 'N/A'}</td>
-                <td className="p-2">{act.title}</td>
-                <td className="p-2">{act.submission}</td>
-                <td className="p-2">{act.status}</td>
-                <td className="p-2">
-                  {act.status === 'graded' ? (
-                    <span>{act.grade}</span>
-                  ) : (
-                    <input
-                      type="text"
-                      className="border p-1 w-16"
-                      value={gradeInputs[key] || ''}
-                      onChange={(e) => handleGradeInputChange(key, e.target.value)}
-                      onKeyDown={(e) => handleGradeKeyDown(key, e, act.studentId)}
-                    />
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    );
-  }
-
-  function TeacherAnalytics() {
-    let totalTasks = 0;
-    let completedTasks = 0;
-
-    units.forEach((u) => {
-      totalTasks += u.subActivities.length;
-      u.subActivities.forEach((sub) => {
-        if (sub.status === 'graded') {
-          completedTasks++;
-        }
-      });
-    });
-
-    let sumPerf = 0;
-    roster.forEach((r) => {
-      sumPerf += r.performance;
-    });
-    const avgPerf = Math.round(sumPerf / roster.length);
-
-    // We'll add a suggestion.
-    let suggestion = "";
-    if (avgPerf < 50) {
-      suggestion = "Your class average is quite low. Focus on fundamental skills and provide more direct support to those struggling.";
-    } else if (avgPerf < 70) {
-      suggestion = "Your class is making progress, but some students may need extra help. Consider small group interventions or targeted practice.";
-    } else if (avgPerf < 85) {
-      suggestion = "Things are going fairly well! You might challenge the higher performers with advanced tasks while helping those still behind.";
-    } else {
-      suggestion = "Your class is excelling overall. Keep them engaged with deeper, more challenging activities and maintain that growth!";
-    }
-
-    return (
-      <div className="border p-4 rounded shadow">
-        <h2 className="text-xl font-semibold mb-2">Analytics</h2>
-        <ul className="list-disc ml-5">
-          <li>Total Published Tasks: {totalTasks}</li>
-          <li>Completed/Graded Tasks: {completedTasks}</li>
-          <li>Average Performance (Roster): {avgPerf}</li>
-        </ul>
-        <div className="mt-4 p-2 bg-blue-50 border border-blue-100 rounded">
-          <p className="font-semibold mb-1">Instructional Suggestion</p>
-          <p className="text-sm text-gray-700">{suggestion}</p>
-        </div>
-      </div>
-    );
-  }
 
   function handleStudentRowClick(stuId) {
     if (expandedStudentId === stuId) {
@@ -493,236 +355,64 @@ export default function App() {
     );
   }
 
-  function MyWorkTab({ studentId, units, submissionText, setSubmissionText, setUnits }) {
-    const tasks = [];
-    units.forEach((u) => {
-      u.subActivities.forEach((sub) => {
-        if (sub.studentId === studentId && sub.status !== 'graded') {
-          tasks.push({ ...sub });
-        }
-      });
-    });
-
-    function handleSubmit(subId) {
-      setUnits((prev) => {
-        return prev.map((unit) => {
-          const newSubs = unit.subActivities.map((s) => {
-            if (s.id === subId) {
-              return {
-                ...s,
-                status: 'submitted',
-                submission: submissionText[subId] || '',
-              };
-            }
-            return s;
-          });
-          return { ...unit, subActivities: newSubs };
-        });
-      });
-    }
-
-    if (!tasks.length) {
-      return <p className="text-gray-600">No assignments to work on.</p>;
-    }
-
-    return (
-      <ul className="space-y-3">
-        {tasks.map((sub) => (
-          <li key={sub.id} className="border bg-white p-2 rounded shadow-sm">
-            <p className="font-semibold">{sub.title}</p>
-            <p className="text-sm text-gray-500 mb-2">Status: {sub.status}</p>
-            {sub.status === 'unsubmitted' && (
-              <>
-                <textarea
-                  rows={2}
-                  className="border w-full p-1 mb-2"
-                  placeholder="Enter your work here..."
-                  value={submissionText[sub.id] || ''}
-                  onChange={(e) => setSubmissionText((p) => ({ ...p, [sub.id]: e.target.value }))}
-                />
-                <button
-                  className={clsButtonPrimary('')}
-                  onClick={() => handleSubmit(sub.id)}
-                >
-                  Submit
-                </button>
-              </>
-            )}
-            {sub.status === 'submitted' && (
-              <div className="text-sm text-gray-700">You submitted: {sub.submission}</div>
-            )}
-          </li>
-        ))}
-      </ul>
-    );
-  }
-
-  function MyGradesTab({ studentId, units }) {
-    const tasks = [];
-    units.forEach((u) => {
-      u.subActivities.forEach((sub) => {
-        if (sub.studentId === studentId && sub.status === 'graded') {
-          tasks.push({ ...sub });
-        }
-      });
-    });
-
-    if (!tasks.length) {
-      return <p className="text-gray-600">No graded assignments yet.</p>;
-    }
-
-    return (
-      <ul className="space-y-3">
-        {tasks.map((sub) => (
-          <li key={sub.id} className="border bg-white p-2 rounded shadow-sm">
-            <p className="font-semibold">{sub.title}</p>
-            <p className="text-sm text-gray-500 mb-2">Status: {sub.status}</p>
-            <p className="text-sm text-gray-700">Grade: {sub.grade}</p>
-            <p className="text-sm text-gray-700">Submission: {sub.submission}</p>
-          </li>
-        ))}
-      </ul>
-    );
-  }
-
-  // Reuse the TutorChat logic, but rename heading to "Ask YoYo"
-  function AskYoYoTeacher() {
-    const [messages, setMessages] = useState([]);
-    const [input, setInput] = useState('');
-
-    async function sendMessage() {
-      if (!input.trim()) return;
-      const userMsg = input.trim();
-      setMessages((prev) => [...prev, { role: 'user', content: userMsg }]);
-      setInput('');
-
-      try {
-        const resp = await fetch('http://localhost:3001/api/tutorChat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userMessage: userMsg }),
-        });
-        const data = await resp.json();
-        setMessages((prev) => [...prev, { role: 'assistant', content: data.reply }]);
-      } catch (err) {
-        console.error('Teacher chat error:', err);
-        setMessages((prev) => [...prev, { role: 'assistant', content: 'Error contacting YoYo.' }]);
-      }
-    }
-
-    return (
-      <div className="border p-4 bg-white rounded shadow-sm flex flex-col h-96">
-        <h3 className="text-lg font-semibold mb-2 text-blue-600">Ask YoYo</h3>
-        <div className="flex-1 overflow-auto border p-2 mb-2">
-          {messages.map((msg, i) => (
-            <div key={i} className="mb-2">
-              <strong>{msg.role === 'assistant' ? 'YoYo: ' : 'You: '}</strong>
-              {msg.content}
-            </div>
-          ))}
-        </div>
-        <div className="flex">
-          <input
-            className="border flex-1 mr-2 p-1 rounded"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
-            placeholder="Ask YoYo anything..."
-          />
-          <button
-            onClick={sendMessage}
-            className={clsButtonPrimary('')}
-          >
-            Send
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // We'll rename the student TutorChat heading to "Ask YoYo" by adjusting the heading.
-  function AskYoYoStudent() {
-    const [messages, setMessages] = useState([]);
-    const [input, setInput] = useState('');
-
-    async function sendMessage() {
-      if (!input.trim()) return;
-      const userMsg = input.trim();
-      setMessages((prev) => [...prev, { role: 'user', content: userMsg }]);
-      setInput('');
-
-      try {
-        const resp = await fetch('http://localhost:3001/api/tutorChat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userMessage: userMsg }),
-        });
-        const data = await resp.json();
-        setMessages((prev) => [...prev, { role: 'assistant', content: data.reply }]);
-      } catch (err) {
-        console.error('Student chat error:', err);
-        setMessages((prev) => [...prev, { role: 'assistant', content: 'Error contacting YoYo.' }]);
-      }
-    }
-
-    return (
-      <div className="border p-4 bg-white rounded shadow-sm flex flex-col h-96">
-        <h3 className="text-lg font-semibold mb-2 text-blue-600">Ask YoYo</h3>
-        <div className="flex-1 overflow-auto border p-2 mb-2">
-          {messages.map((msg, i) => (
-            <div key={i} className="mb-2">
-              <strong>{msg.role === 'assistant' ? 'YoYo: ' : 'You: '}</strong>
-              {msg.content}
-            </div>
-          ))}
-        </div>
-        <div className="flex">
-          <input
-            className="border flex-1 mr-2 p-1 rounded"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
-            placeholder="Ask YoYo anything..."
-          />
-          <button
-            onClick={sendMessage}
-            className={clsButtonPrimary('')}
-          >
-            Send
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   // -------------- MAIN RENDER -------------- //
 
-  if (role === 'home') {
+  if (role === 'login') {
     return (
-      <div className="min-h-screen bg-gradient-to-r from-blue-50 to-blue-100 p-4 flex flex-col items-center justify-center">
-        {/* Branding: Yoyo header */}
-        <h1 className="text-4xl font-bold mb-2">Welcome to YoYo</h1>
-        <p className="mb-4 text-lg text-gray-700 italic">Your All-in-One AI-Powered Education Platform</p>
-        <div className="space-x-4 mt-4">
+      <div className="min-h-screen bg-gradient-to-r from-blue-50 to-blue-100 flex items-center justify-center p-4">
+        <div className="bg-white shadow rounded p-6 w-80">
+          <h1 className="text-2xl font-bold mb-4 text-center">YoYo Login</h1>
+          <input
+            className="border p-2 rounded w-full mb-2"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <input
+            type="password"
+            className="border p-2 rounded w-full mb-4"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
           <button
-            className={clsButtonPrimary('mr-2')}
-            onClick={() => setRole('teacher')}
+            className={clsButtonPrimary('w-full')}
+            onClick={() => {
+              setUsername('');
+              setPassword('');
+              setRole('choose');
+            }}
           >
-            Teacher Portal
-          </button>
-          <button
-            className={clsButtonPrimary('bg-green-500 hover:bg-green-600')}
-            onClick={() => setRole('student')}
-          >
-            Student Portal
+            Login
           </button>
         </div>
-        <button
-          onClick={clearDatabase}
-          className="mt-6 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
-        >
-          Clear Database
-        </button>
+      </div>
+    );
+  }
+
+  if (role === 'choose') {
+    return (
+      <div className="min-h-screen bg-gradient-to-r from-blue-50 to-blue-100 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded shadow">
+            <h2 className="text-xl font-bold mb-4 text-center">Are you a teacher or student?</h2>
+            <div className="flex justify-center space-x-4">
+              <button
+                className={clsButtonPrimary('')}
+                onClick={() => setRole('teacher')}
+              >
+                Teacher
+              </button>
+              <button
+                className={clsButtonPrimary('bg-green-500 hover:bg-green-600')}
+                onClick={() => setRole('student')}
+              >
+                Student
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -736,9 +426,9 @@ export default function App() {
             <h1 className="text-3xl font-bold text-blue-700">YoYo - Teacher Portal</h1>
             <button
               className={clsButtonSecondary('')}
-              onClick={() => setRole('home')}
+              onClick={() => setRole('login')}
             >
-              Return to Home
+              Return to Login
             </button>
           </div>
 
@@ -968,12 +658,17 @@ export default function App() {
             <div className="border rounded p-4 shadow">
               <h2 className="text-xl font-semibold mb-2">Gradebook</h2>
               <p className="text-sm mb-2">Enter up to 3 digits, press Enter to finalize grade</p>
-              <Gradebook />
+              <Gradebook
+                units={units}
+                setUnits={setUnits}
+                roster={roster}
+                setRoster={setRoster}
+              />
             </div>
           )}
 
           {teacherTab === 'analytics' && (
-            <TeacherAnalytics />
+            <TeacherAnalytics units={units} roster={roster} />
           )}
 
           {teacherTab === 'askyoyo' && (
@@ -992,9 +687,9 @@ export default function App() {
             <h1 className="text-3xl font-bold text-blue-700">YoYo - Student Portal</h1>
             <button
               className={clsButtonSecondary('')}
-              onClick={() => setRole('home')}
+              onClick={() => setRole('login')}
             >
-              Return to Home
+              Return to Login
             </button>
           </div>
 
