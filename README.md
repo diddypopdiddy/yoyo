@@ -9,5 +9,3 @@ This repository contains a small React demo app. To view it on GitHub Pages or l
 The app uses the standalone Babel compiler to transform the JSX files in `src/` at runtime. TailwindCSS is loaded via CDN for styling.
 
 If you want to run the demo locally without GitHub Pages, simply open `index.html` in your browser.
-
-The frontend expects a backend server at `http://localhost:3001` for all `/api/...` requests. To use a different backend URL, define a global `API_BASE` variable in `index.html` before loading the React scripts.
