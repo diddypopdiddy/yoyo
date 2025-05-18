@@ -4,12 +4,12 @@
 // ALWAYS ask the user for expected fallback behavior.
 
 import React, { useState } from 'react';
-import Gradebook from './components/Gradebook.jsx';
-import TeacherAnalytics from './components/TeacherAnalytics.jsx';
-import MyWorkTab from './components/MyWorkTab.jsx';
-import MyGradesTab from './components/MyGradesTab.jsx';
-import AskYoYoTeacher from './components/AskYoYoTeacher.jsx';
-import AskYoYoStudent from './components/AskYoYoStudent.jsx';
+import Gradebook from './components/Gradebook.js';
+import TeacherAnalytics from './components/TeacherAnalytics.js';
+import MyWorkTab from './components/MyWorkTab.js';
+import MyGradesTab from './components/MyGradesTab.js';
+import AskYoYoTeacher from './components/AskYoYoTeacher.js';
+import AskYoYoStudent from './components/AskYoYoStudent.js';
 
 // Base URL for API calls. Defaults to localhost but can be overridden by
 // setting window.API_BASE before the scripts are loaded.
