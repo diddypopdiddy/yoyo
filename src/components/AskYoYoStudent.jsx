@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+const API_BASE = window.API_BASE || 'http://localhost:3001';
+
 function clsButtonPrimary(extra = '') {
   return `bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded ${extra}`;
 }
@@ -15,7 +17,7 @@ export default function AskYoYoStudent() {
     setInput('');
 
     try {
-      const resp = await fetch('http://localhost:3001/api/tutorChat', {
+      const resp = await fetch(`${API_BASE}/api/tutorChat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userMessage: userMsg }),
