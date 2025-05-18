@@ -11,6 +11,10 @@ import MyGradesTab from './components/MyGradesTab.jsx';
 import AskYoYoTeacher from './components/AskYoYoTeacher.jsx';
 import AskYoYoStudent from './components/AskYoYoStudent.jsx';
 
+// Base URL for API calls. Defaults to localhost but can be overridden by
+// setting window.API_BASE before the scripts are loaded.
+const API_BASE = window.API_BASE || 'http://localhost:3001';
+
 // --------------------- DUMMY DATA ---------------------- //
 const dummyRoster = [
   { id: 'S001', name: 'Alice', grade: '3', performance: 95 },
@@ -169,7 +173,7 @@ export default function App() {
     for (const stu of chosen) {
       try {
         console.log(`Calling /api/generateActivities for ${stu.name}...`);
-        const resp = await fetch('http://localhost:3001/api/generateActivities', {
+        const resp = await fetch(`${API_BASE}/api/generateActivities`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
